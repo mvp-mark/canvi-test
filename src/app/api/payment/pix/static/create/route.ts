@@ -13,10 +13,6 @@ export async function POST(req: Request) {
         const { token } = await getToken();
         console.log("Dados recebidos:", data);
 
-
-
-
-
         const purchase = await paymentRepository.createPurchase({
             status: "CREATED",
             userId: body.userId,
