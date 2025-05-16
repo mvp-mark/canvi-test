@@ -1,0 +1,81 @@
+import { paymentRepository } from "@/server/repository/payment.repository";
+import { getToken } from "@/services/payment.service";
+import axios from "axios";
+import { NextResponse } from "next/server";
+import { z } from "zod";
+
+// Define o esquema de validação do corpo da requisição
+export const PixRequestSchema = z.object({
+    valor: z.number(),
+    vencimento: z.string(),
+    descricao: z.string(),
+    tipo_transacao: z.string().optional(),
+    texto_instrucao: z.string(),
+    identificador_externo: z.string().uuid().optional(),
+    identificador_movimento: z.string().uuid(),
+    enviar_qr_code: z.boolean(),
+    tag: z.array(z.string()),
+});
+
+export async function POST(req: Request) {
+    try {
+        const body = await req.json();
+        const data = PixRequestSchema.parse(body);
+        const { token } = await getToken();
+        console.log("Dados recebidos:", data);
+
+        const purchase = await paymentRepository.createPurchase({
+            status: "CREATED",
+            userId: body.userId,
+            descricao: body.descricao
+        })
+
+        const response = await axios.post(`${process.env.CANVI_URL}/bt/pix`, {
+            ...data,
+            identificador_externo: purchase.id,
+        }, {
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`,
+            },
+        });
+        console.log({ data: response.data });
+
+        const payment = await paymentRepository.updatePurchase(purchase.id, {
+            status: "PENDING",
+            payment: {
+                ...response.data.data,
+                id_invoice_pix: response.data.data.id_invoice_pix,
+            },
+        });
+        if (response.data.code >= 400) {
+            const errorResponse = response.data;
+            return NextResponse.json(
+                { message: "Erro ao enviar para o endpoint externo", error: errorResponse, ...errorResponse },
+                { status: response.data.code }
+            );
+        }
+        const responseData = response.data;
+
+
+        return NextResponse.json(
+            { message: "Cobrança criada com sucesso!", ...payment },
+            { status: 201 }
+        );
+    } catch (error) {
+        console.log("Erro:", error);
+
+        // Retorna erro de validação ou outro erro
+        if (error instanceof z.ZodError) {
+            return NextResponse.json(
+                { message: "Erro de validação", errors: error.errors },
+                { status: 400 }
+            );
+        }
+
+        return NextResponse.json(
+            { message: "Erro interno do servidor" },
+            { status: 500 }
+        );
+    }
+}
