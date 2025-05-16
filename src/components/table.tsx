@@ -46,10 +46,12 @@ export default function TableWithPagination<T>({
                 </thead>
                 <tbody>
                     {currentData.map((row, rowIndex) => {
-                        // Try to use the first column's value as a unique key fallback to rowIndex if not available
-                        const rowKey =
-                            columns.length > 0 && row[columns[0].key] !== undefined
-                                ? String(row[columns[0].key] ?? "")
+                        type RowKeyType = T[keyof T];
+                        // Garante que columns[0] existe e que row[column.key] não é nulo/undefined
+                        const firstColumnKey = columns[0]?.key;
+                        const rowKey: string =
+                            firstColumnKey && row && row[firstColumnKey] != null
+                                ? String(row[firstColumnKey] as RowKeyType)
                                 : `row-${rowIndex}`;
                         return (
                             // biome-ignore lint/a11y/useKeyWithClickEvents: <explanation>
@@ -63,7 +65,7 @@ export default function TableWithPagination<T>({
                                         key={String(column.key)}
                                         className="border border-gray-300 px-4 py-2 text-gray-600 text-sm"
                                     >
-                                        {String(row[column.key])}
+                                        {row[column.key] != null ? String(row[column.key]) : ""}
                                     </td>
                                 ))}
                             </tr>

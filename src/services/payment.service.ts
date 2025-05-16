@@ -1,5 +1,5 @@
 import { apiClient } from "@/lib/axios";
-import type { PixRequestSchema } from "@/app/api/payment/pix/dynamic/create/route";
+import type { PixRequestSchema } from "@/scheme/pix";
 import type { z } from "zod";
 import { paymentRepository } from "@/server/repository/payment.repository";
 

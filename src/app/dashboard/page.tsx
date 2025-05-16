@@ -71,7 +71,7 @@ export default function Dashboard() {
         setForm({ ...form, [e.target.name]: e.target.value });
     };
 
-    const handleInputChange2 = (e) => {
+    const handleInputChange2 = (e: any) => {
         const { name, value } = e.target
         setForm((prev) => ({
             ...prev,

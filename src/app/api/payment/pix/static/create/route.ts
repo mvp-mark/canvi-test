@@ -1,21 +1,10 @@
+import { PixRequestSchema } from "@/scheme/pix";
 import { paymentRepository } from "@/server/repository/payment.repository";
 import { getToken } from "@/services/payment.service";
 import { verifyPaymentTask } from "@/trigger/example";
 import axios from "axios";
 import { NextResponse } from "next/server";
 import { z } from "zod";
-
-// Define o esquema de validação do corpo da requisição
-export const PixRequestSchema = z.object({
-    valor: z.number(),
-    descricao: z.string(),
-    tipo_transacao: z.string().optional(),
-    texto_instrucao: z.string(),
-    identificador_externo: z.string().uuid().optional(),
-    identificador_movimento: z.string().uuid(),
-    enviar_qr_code: z.boolean(),
-    tag: z.array(z.string()),
-});
 
 export async function POST(req: Request) {
     try {
