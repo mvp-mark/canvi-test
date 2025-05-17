@@ -48,15 +48,6 @@ export async function POST(req: Request) {
         }
 
 
-        await verifyPaymentTask.trigger({
-            externalId: payment.id, // ou o id do payment, conforme sua lógica
-            timezone: "America/Sao_Paulo", // ajuste conforme necessário
-            type: "IMPERATIVE", // ou "DECLARATIVE", conforme seu uso
-            scheduleId: "payment-verification", // ajuste conforme necessário
-            timestamp: new Date(),
-            upcoming: [], // Adiciona a propriedade obrigatória upcoming como array vazio ou conforme necessário
-        });
-
         return NextResponse.json(
             { message: "Cobrança criada com sucesso!", payment },
             { status: 201 }

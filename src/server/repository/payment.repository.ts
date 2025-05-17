@@ -20,6 +20,8 @@ export const paymentRepository = {
     },
     async updatePurchase(id: string, data: any) {
         try {
+            console.log({ updatePurchase: data.payment });
+
             const payment = await db.purchase.update({
                 where: { id },
                 data: {
@@ -106,12 +108,12 @@ export const paymentRepository = {
     },
     async updateWebhookPayment(paymentId: string, purchaseId: string, data: { status: string }) {
         try {
-            const payment = await db.payment.update({
+            await db.payment.update({
                 where: {
                     id: paymentId,
                 },
                 data: {
-                    ...data,
+                    status: data.status,
                 },
             });
             await db.purchase.update({

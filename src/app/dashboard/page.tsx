@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import TableWithPagination from "@/components/table";
-import { signIn, useSession } from "next-auth/react";
+import { signIn, signOut, useSession } from "next-auth/react";
 import { formatDate } from "date-fns";
 import { v4 as uuidv4 } from "uuid";
 import CurrencyInput from "@/components/currency-input";
@@ -158,6 +158,14 @@ export default function Dashboard() {
                     onClick={() => setShowModal(true)}
                 >
                     Adicionar Pagamento
+                </button>
+
+                {/* biome-ignore lint/a11y/useButtonType: <explanation> */}
+                <button
+                    className="rounded bg-red-500 px-4 py-2 text-white hover:bg-red-600"
+                    onClick={() => signOut({ callbackUrl: "/" })}
+                >
+                    Sair
                 </button>
             </div>
             <div className="container flex flex-col items-center justify-center gap-12 px-4 py-16">

@@ -30,9 +30,11 @@ export async function POST(req: Request) {
             { status: 200 }
         );
     } catch (error) {
+        console.log("Erro ao processar a solicitação:", { error });
+
         if (error instanceof z.ZodError) {
             return NextResponse.json(
-                { message: "Erro de validação", errors: error.errors },
+                { message: "Erro de validação", errors: error.message },
                 { status: 400 }
             );
         }

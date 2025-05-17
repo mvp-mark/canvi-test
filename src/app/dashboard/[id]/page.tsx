@@ -1,7 +1,9 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { PaymentListener } from "@/components/payment-listener";
+import toast from "react-hot-toast";
+import axios from "axios";
 
 type Payment = {
     id_invoice_pix: number;
@@ -40,19 +42,98 @@ export default function PurchaseDetailsPage() {
     const [purchase, setPurchase] = useState<Payment | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [lastStatus, setLastStatus] = useState<string | undefined>(undefined);
+
 
     useEffect(() => {
         if (!id) return;
-        setLoading(true);
+
         fetch(`/api/payment/pix/dynamic/getById?id=${id}`)
             .then(async (res) => {
                 if (!res.ok) throw new Error("Erro ao buscar a compra");
                 return res.json();
             })
-            .then((data) => setPurchase(data))
-            .catch((err) => setError(err.message))
-            .finally(() => setLoading(false));
+            .then((data) => {
+                setPurchase((prev) => {
+                    // Exibe toast se o status mudou
+                    if (prev && prev.status !== data.status) {
+                        toast.success(`Status atualizado: ${data.status}`);
+                    }
+                    return data;
+                });
+                setLastStatus(data.status);
+            })
+            .catch(() => { }).finally(() => {
+                setLoading(false);
+            });
+
     }, [id]);
+    const purchaseIdRef = useRef(purchase?.id_invoice_pix)
+
+    useEffect(() => {
+        purchaseIdRef.current = purchase?.id_invoice_pix
+    }, [purchase?.id_invoice_pix])
+
+    useEffect(() => {
+        if (!id) return
+        if (!purchase?.id_invoice_pix) return
+        if (purchase?.status === "credited") return
+
+        const fetchPurchase = async () => {
+            try {
+                const res = await fetch("/api/payment/pix/dynamic/consult", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        id_invoice_pix: purchaseIdRef.current,
+                    }),
+                })
+
+                if (!res.ok) throw new Error("Erro ao buscar a compra")
+
+                const { data } = await res.json()
+
+
+                if (purchaseIdRef.current === purchase?.id_invoice_pix) {
+                    if (purchase.status !== data.status) {
+                        toast.success(`Compra atualizada: ${data.status}`)
+                    }
+
+                    setPurchase((prev) => {
+                        if (!prev) return prev
+                        return {
+                            ...prev,
+                            status: data.status,
+                            purchase: {
+                                ...prev.purchase,
+                                status: data.status,
+                                user: {
+                                    ...prev?.purchase?.user,
+                                },
+                            },
+                        }
+                    })
+                    await axios.post("/api/payment/pix/dynamic/update", {
+                        paymentId: purchase.id,
+                        status: data.status,
+                        purchaseId: purchase.purchase.id,
+                    });
+                }
+
+            } catch (error) {
+                console.error("Error fetching purchase:", error)
+            } finally {
+
+            }
+        }
+
+        fetchPurchase()
+        const intervalId = setInterval(fetchPurchase, 60000)
+        return () => clearInterval(intervalId)
+    }, [id, purchase?.id_invoice_pix, purchase?.status])
+
 
     useEffect(() => {
         const eventSource = new EventSource("/api/sse");

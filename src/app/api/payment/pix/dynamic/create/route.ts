@@ -1,6 +1,7 @@
 import { PixRequestSchema } from "@/scheme/pix";
 import { paymentRepository } from "@/server/repository/payment.repository";
 import { getToken } from "@/services/payment.service";
+import { verifyPaymentTask } from "@/trigger/example";
 import axios from "axios";
 import { NextResponse } from "next/server";
 import { z } from "zod";
@@ -45,7 +46,14 @@ export async function POST(req: Request) {
         }
         const responseData = response.data;
 
-
+        await verifyPaymentTask.trigger({
+            externalId: payment.id,
+            timezone: "America/Manaus",
+            type: "IMPERATIVE",
+            scheduleId: "payment-verification",
+            timestamp: new Date(),
+            upcoming: [],
+        });
         return NextResponse.json(
             { message: "Cobrança criada com sucesso!", ...payment },
             { status: 201 }

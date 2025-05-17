@@ -2,8 +2,19 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 import { paymentRepository } from '@/server/repository/payment.repository';
+import { helloWorldTask } from '@/trigger/example';
 
 export async function GET(req: NextRequest) {
+
+    await helloWorldTask.trigger({
+        externalId: '1234567890',
+        timezone: 'America/Manaus',
+        type: 'IMPERATIVE',
+        scheduleId: 'payment-verification',
+        timestamp: new Date(),
+        upcoming: [],
+    });
+
     const { searchParams } = new URL(req.url);
     const id = searchParams.get('id');
 
