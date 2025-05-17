@@ -21,6 +21,7 @@ export const env = createEnv({
     CANVI_URL: z.string().url(),
     PRISMA_IGNORE_DATETIME_PRECISION: z.string().default("true"),
     TRIGGER_API_KEY: z.string(),
+    TRIGGER_SECRET_KEY: z.string(),
   },
 
   /**
@@ -47,6 +48,7 @@ export const env = createEnv({
     PRISMA_IGNORE_DATETIME_PRECISION:
       process.env.PRISMA_IGNORE_DATETIME_PRECISION,
     TRIGGER_API_KEY: process.env.TRIGGER_API_KEY,
+    TRIGGER_SECRET_KEY: process.env.TRIGGER_SECRET_KEY,
   },
   /**
    * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation. This is especially
